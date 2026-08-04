@@ -730,7 +730,6 @@
       var ch = peek();
       if (ch === "{") return parseObject();
       if (ch === "[") return parseArray();
-      if (ch === '"' || ch === "'") return readLenientToken("value").value;
       if (ch === "-" || (ch >= "0" && ch <= "9")) {
         var m = /^-?\d+(\.\d+)?([eE][+-]?\d+)?/.exec(text.slice(i));
         if (m) { i += m[0].length; return Number(m[0]); }
@@ -739,14 +738,30 @@
       if (text.slice(i, i + 5) === "false") { i += 5; return false; }
       if (text.slice(i, i + 4) === "null") { i += 4; return null; }
       if (ch === "") { addWarning("값이 누락되어 빈 문자열로 처리했습니다."); return ""; }
-      return readLenientToken("value").value;
+
+      var strVal = readLenientToken("value").value;
+      if (typeof strVal === "string") {
+        skipWs();
+        if (peek() === ":") {
+          // this "value" was actually meant to be the first key of a nested
+          // object whose opening "{" is missing entirely.
+          addWarning("값 앞의 여는 중괄호({)가 없어 자동으로 보정했습니다.");
+          i++; // consume ':'
+          skipWs();
+          var obj2 = {};
+          obj2[strVal] = parseValue();
+          skipWs();
+          if (peek() === ",") { i++; }
+          else if (peek() === "}") { i++; return obj2; }
+          else if (peek() === "") { addWarning("닫는 중괄호(})가 없어 자동으로 닫았습니다."); return obj2; }
+          else { addWarning("쉼표(,)가 누락되어 자동으로 보정했습니다."); }
+          return parseObjectEntries(obj2);
+        }
+      }
+      return strVal;
     }
 
-    function parseObject() {
-      i++; // consume '{'
-      var obj = {};
-      skipWs();
-      if (peek() === "}") { i++; return obj; }
+    function parseObjectEntries(obj) {
       while (i < len) {
         skipWs();
         if (peek() === "}") { i++; break; }
@@ -765,6 +780,14 @@
         addWarning("쉼표(,)가 누락되어 자동으로 보정했습니다.");
       }
       return obj;
+    }
+
+    function parseObject() {
+      i++; // consume '{'
+      var obj = {};
+      skipWs();
+      if (peek() === "}") { i++; return obj; }
+      return parseObjectEntries(obj);
     }
 
     function parseArray() {
