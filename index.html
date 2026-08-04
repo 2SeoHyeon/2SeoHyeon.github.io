@@ -273,6 +273,7 @@
     font-family: var(--font-mono);
   }
   .error-line.show { display: flex; }
+  .error-line.warn { color: var(--num); }
 
   /* output grid */
   .output-grid {
@@ -283,16 +284,9 @@
     min-height: 480px;
   }
 
-  .right-col {
-    display: grid;
-    grid-template-rows: 1fr 1fr;
-    gap: 14px;
-    min-height: 0;
-  }
-
   @media (max-width: 880px) {
     .output-grid { grid-template-columns: 1fr; min-height: unset; }
-    .right-col { min-height: 480px; }
+    .output-grid > .card { min-height: 420px; }
   }
 
   .copy-btn {
@@ -507,29 +501,19 @@
   </section>
 
   <section class="output-grid">
-    <div class="card" id="convertedCard">
+    <div class="card" id="prettyCard">
       <div class="card-head">
-        <span class="card-title">변환 문자열 <span class="badge" id="outFormatBadgeLeft">JSON</span></span>
-        <button class="copy-btn" data-copy="converted">복사</button>
+        <span class="card-title">포맷팅 결과 <span class="badge" id="outFormatBadge">JSON</span></span>
+        <button class="copy-btn" data-copy="pretty">복사</button>
       </div>
-      <pre class="output" id="convertedOutput" data-placeholder="입력 데이터를 위 텍스트 영역에 입력하면 결과가 표시됩니다."></pre>
+      <pre class="output" id="prettyOutput" data-placeholder="정형화된(pretty) 결과가 여기에 표시됩니다."></pre>
     </div>
 
-    <div class="right-col">
-      <div class="card" id="prettyCard">
-        <div class="card-head">
-          <span class="card-title">포맷팅 결과 <span class="badge" id="outFormatBadgeRight">JSON</span></span>
-          <button class="copy-btn" data-copy="pretty">복사</button>
-        </div>
-        <pre class="output" id="prettyOutput" data-placeholder="정형화된(pretty) 결과가 여기에 표시됩니다."></pre>
+    <div class="card" id="treeCard">
+      <div class="card-head">
+        <span class="card-title">트리 구조</span>
       </div>
-
-      <div class="card" id="treeCard">
-        <div class="card-head">
-          <span class="card-title">트리 구조</span>
-        </div>
-        <div class="tree" id="treeOutput"></div>
-      </div>
+      <div class="tree" id="treeOutput"></div>
     </div>
   </section>
 
@@ -547,11 +531,9 @@
   var detectedBadge = document.getElementById("detectedBadge");
   var errorLine = document.getElementById("errorLine");
   var errorText = document.getElementById("errorText");
-  var convertedOutput = document.getElementById("convertedOutput");
   var prettyOutput = document.getElementById("prettyOutput");
   var treeOutput = document.getElementById("treeOutput");
-  var outFormatBadgeLeft = document.getElementById("outFormatBadgeLeft");
-  var outFormatBadgeRight = document.getElementById("outFormatBadgeRight");
+  var outFormatBadge = document.getElementById("outFormatBadge");
 
   var state = {
     inputMode: "auto",   // auto | querystring | json | xml
@@ -581,19 +563,25 @@
   }
 
   function parseQueryString(text) {
-    var segments = text.split("&").map(function (s) { return s.trim(); }).filter(function (s) { return s.length > 0; });
+    var warnings = [];
+    function addWarning(msg) { if (warnings.indexOf(msg) === -1) warnings.push(msg); }
+
+    var t = text;
+    if (t.charAt(0) === "?") { t = t.slice(1); addWarning("맨 앞의 '?' 문자를 제거했습니다."); }
+
+    var segments = t.split("&").map(function (s) { return s.trim(); }).filter(function (s) { return s.length > 0; });
     var obj = {};
     segments.forEach(function (seg) {
       var eqIdx = seg.indexOf("=");
       var key, value;
       if (eqIdx === -1) { key = seg; value = ""; }
       else { key = seg.slice(0, eqIdx); value = seg.slice(eqIdx + 1); }
-      try { key = decodeURIComponent(key); } catch (e) {}
-      try { value = decodeURIComponent(value); } catch (e) {}
+      try { key = decodeURIComponent(key); } catch (e) { addWarning("키를 디코딩할 수 없어 원본 텍스트를 사용했습니다."); }
+      try { value = decodeURIComponent(value); } catch (e) { addWarning("값을 디코딩할 수 없어 원본 텍스트를 사용했습니다."); }
       addKV(obj, key, value);
     });
-    if (segments.length === 0) throw new Error("유효한 key=value 쌍을 찾을 수 없습니다.");
-    return obj;
+    if (segments.length === 0) addWarning("유효한 key=value 쌍을 찾지 못해 빈 객체로 처리했습니다.");
+    return { obj: obj, warnings: warnings };
   }
 
   function xmlNodeToObj(node) {
@@ -633,16 +621,276 @@
     return { rootTag: root.tagName, data: xmlNodeToObj(root) };
   }
 
+  // ---------- lenient XML repair ----------
+  // Recovers a best-effort element tree even when closing/opening tags are
+  // missing, mismatched, or the document has no single root element.
+
+  function lenientXmlParse(text) {
+    var warnings = [];
+    function addWarning(msg) { if (warnings.indexOf(msg) === -1) warnings.push(msg); }
+
+    var src = text
+      .replace(/<!--[\s\S]*?-->/g, "")
+      .replace(/<\?[\s\S]*?\?>/g, "")
+      .replace(/<!DOCTYPE[\s\S]*?>/gi, "");
+
+    function parseAttrs(attrStr) {
+      var attrs = {};
+      var re = /([a-zA-Z_][\w:.\-]*)\s*=\s*("([^"]*)"|'([^']*)')/g;
+      var m;
+      while ((m = re.exec(attrStr))) {
+        attrs[m[1]] = m[3] !== undefined ? m[3] : m[4];
+      }
+      return attrs;
+    }
+
+    function finalizeNode(node) {
+      return { tag: node.tag, attrs: node.attrs, children: node.children, text: node.textParts.join("").trim() };
+    }
+
+    var stack = [];
+    var topLevel = [];
+
+    function closeElement(node) {
+      if (stack.length > 0) stack[stack.length - 1].children.push(node);
+      else topLevel.push(node);
+    }
+    function appendText(str) {
+      if (str && stack.length > 0) stack[stack.length - 1].textParts.push(str);
+    }
+
+    var tagRe = /<(\/?)\s*([a-zA-Z_][\w:.\-]*)([^<>]*)>/g;
+    var lastIndex = 0;
+    var match;
+    while ((match = tagRe.exec(src)) !== null) {
+      appendText(src.slice(lastIndex, match.index));
+      lastIndex = tagRe.lastIndex;
+
+      var isClosing = match[1] === "/";
+      var tagName = match[2];
+      var raw = match[3] || "";
+      var selfClosing = /\/\s*$/.test(raw);
+      var attrStr = selfClosing ? raw.replace(/\/\s*$/, "") : raw;
+
+      if (isClosing) {
+        var idx = -1;
+        for (var s = stack.length - 1; s >= 0; s--) {
+          if (stack[s].tag === tagName) { idx = s; break; }
+        }
+        if (idx === -1) {
+          addWarning("여는 태그가 없는 </" + tagName + ">를 무시했습니다.");
+        } else {
+          while (stack.length - 1 > idx) {
+            var unclosed = stack.pop();
+            addWarning("</" + unclosed.tag + "> 태그가 없어 자동으로 닫았습니다.");
+            closeElement(finalizeNode(unclosed));
+          }
+          closeElement(finalizeNode(stack.pop()));
+        }
+      } else {
+        var node = { tag: tagName, attrs: parseAttrs(attrStr), children: [], textParts: [] };
+        if (selfClosing) closeElement(finalizeNode(node));
+        else stack.push(node);
+      }
+    }
+    appendText(src.slice(lastIndex));
+
+    while (stack.length > 0) {
+      var remaining = stack.pop();
+      addWarning("</" + remaining.tag + "> 태그가 없어 자동으로 닫았습니다.");
+      closeElement(finalizeNode(remaining));
+    }
+
+    if (topLevel.length === 0) {
+      throw new Error("XML 요소를 찾을 수 없습니다.");
+    }
+
+    function nodeToObj(node) {
+      var attrs = {};
+      Object.keys(node.attrs).forEach(function (k) { attrs["@" + k] = node.attrs[k]; });
+      if (node.children.length === 0) {
+        var text = node.text || "";
+        if (Object.keys(attrs).length === 0) return text;
+        var leaf = {};
+        Object.keys(attrs).forEach(function (k) { leaf[k] = attrs[k]; });
+        if (text !== "") leaf["#text"] = text;
+        return leaf;
+      }
+      var result = {};
+      Object.keys(attrs).forEach(function (k) { result[k] = attrs[k]; });
+      node.children.forEach(function (child) { addKV(result, child.tag, nodeToObj(child)); });
+      return result;
+    }
+
+    if (topLevel.length === 1) {
+      return { rootTag: topLevel[0].tag, data: nodeToObj(topLevel[0]), warnings: warnings };
+    }
+
+    addWarning("여러 개의 최상위 요소를 <root>로 묶었습니다.");
+    var rootObj = {};
+    topLevel.forEach(function (node) { addKV(rootObj, node.tag, nodeToObj(node)); });
+    return { rootTag: "root", data: rootObj, warnings: warnings };
+  }
+
+  // ---------- lenient JSON repair ----------
+  // Recovers a best-effort structure from JSON with common typos (missing
+  // quotes around keys/values, missing colons, missing/extra commas, single
+  // quotes, unbalanced closing brackets) instead of failing outright.
+
+  function unescapeJsonString(raw) {
+    try { return JSON.parse('"' + raw + '"'); } catch (e) { return raw; }
+  }
+
+  function lenientJsonParse(text) {
+    var i = 0;
+    var len = text.length;
+    var warnings = [];
+
+    function addWarning(msg) {
+      if (warnings.indexOf(msg) === -1) warnings.push(msg);
+    }
+    function skipWs() {
+      while (i < len && /\s/.test(text.charAt(i))) i++;
+    }
+    function peek() { return i < len ? text.charAt(i) : ""; }
+
+    function readQuotedString(quoteChar) {
+      i++; // skip opening quote
+      var out = "";
+      while (i < len) {
+        var ch = text.charAt(i);
+        if (ch === "\\" && i + 1 < len) { out += ch + text.charAt(i + 1); i += 2; continue; }
+        if (ch === quoteChar) { i++; return out; }
+        out += ch;
+        i++;
+      }
+      addWarning("닫히지 않은 문자열을 자동으로 닫았습니다.");
+      return out;
+    }
+
+    function readLenientToken(context) {
+      skipWs();
+      var ch = peek();
+      if (ch === '"' || ch === "'") {
+        if (ch === "'") addWarning("작은따옴표(')를 큰따옴표로 보정했습니다.");
+        return { value: unescapeJsonString(readQuotedString(ch)) };
+      }
+      var start = i;
+      while (i < len) {
+        var c = text.charAt(i);
+        if (c === '"' || c === "'") {
+          var captured = text.slice(start, i).trim();
+          i++;
+          addWarning(context === "key" ? "키에 누락된 여는 인용부호를 보정했습니다." : "값에 누락된 여는 인용부호를 보정했습니다.");
+          return { value: captured };
+        }
+        if (c === ":" || c === "," || c === "}" || c === "]") break;
+        i++;
+      }
+      var word = text.slice(start, i).trim();
+      if (context === "key") {
+        if (word !== "") addWarning("키에 누락된 인용부호를 보정했습니다.");
+        return { value: word };
+      }
+      if (/^-?\d+(\.\d+)?([eE][+-]?\d+)?$/.test(word)) return { value: Number(word) };
+      if (word === "true") return { value: true };
+      if (word === "false") return { value: false };
+      if (word === "null") return { value: null };
+      if (word !== "") addWarning("값에 누락된 인용부호를 보정했습니다.");
+      return { value: word };
+    }
+
+    function parseValue() {
+      skipWs();
+      var ch = peek();
+      if (ch === "{") return parseObject();
+      if (ch === "[") return parseArray();
+      if (ch === '"' || ch === "'") return readLenientToken("value").value;
+      if (ch === "-" || (ch >= "0" && ch <= "9")) {
+        var m = /^-?\d+(\.\d+)?([eE][+-]?\d+)?/.exec(text.slice(i));
+        if (m) { i += m[0].length; return Number(m[0]); }
+      }
+      if (text.slice(i, i + 4) === "true") { i += 4; return true; }
+      if (text.slice(i, i + 5) === "false") { i += 5; return false; }
+      if (text.slice(i, i + 4) === "null") { i += 4; return null; }
+      if (ch === "") { addWarning("값이 누락되어 빈 문자열로 처리했습니다."); return ""; }
+      return readLenientToken("value").value;
+    }
+
+    function parseObject() {
+      i++; // consume '{'
+      var obj = {};
+      skipWs();
+      if (peek() === "}") { i++; return obj; }
+      while (i < len) {
+        skipWs();
+        if (peek() === "}") { i++; break; }
+        if (peek() === ",") { addWarning("불필요한 쉼표를 무시했습니다."); i++; continue; }
+        if (peek() === "") { addWarning("닫는 중괄호(})가 없어 자동으로 닫았습니다."); break; }
+        var key = String(readLenientToken("key").value);
+        skipWs();
+        if (peek() === ":") { i++; }
+        else { addWarning("키와 값 사이의 콜론(:)이 누락되어 자동으로 보정했습니다."); }
+        skipWs();
+        obj[key] = parseValue();
+        skipWs();
+        if (peek() === ",") { i++; continue; }
+        if (peek() === "}") { i++; break; }
+        if (peek() === "") { addWarning("닫는 중괄호(})가 없어 자동으로 닫았습니다."); break; }
+        addWarning("쉼표(,)가 누락되어 자동으로 보정했습니다.");
+      }
+      return obj;
+    }
+
+    function parseArray() {
+      i++; // consume '['
+      var arr = [];
+      skipWs();
+      if (peek() === "]") { i++; return arr; }
+      while (i < len) {
+        skipWs();
+        if (peek() === "]") { i++; break; }
+        if (peek() === ",") { addWarning("불필요한 쉼표를 무시했습니다."); i++; continue; }
+        if (peek() === "") { addWarning("닫는 대괄호(])가 없어 자동으로 닫았습니다."); break; }
+        arr.push(parseValue());
+        skipWs();
+        if (peek() === ",") { i++; continue; }
+        if (peek() === "]") { i++; break; }
+        if (peek() === "") { addWarning("닫는 대괄호(])가 없어 자동으로 닫았습니다."); break; }
+        addWarning("쉼표(,)가 누락되어 자동으로 보정했습니다.");
+      }
+      return arr;
+    }
+
+    skipWs();
+    if (peek() !== "{" && peek() !== "[") {
+      throw new Error("JSON 형식을 해석할 수 없습니다.");
+    }
+    var value = parseValue();
+    return { value: value, warnings: warnings };
+  }
+
   function parseInput(text, mode) {
     var fmt = mode === "auto" ? detectFormat(text) : mode;
     if (fmt === "json") {
-      return { format: "json", model: JSON.parse(text), rootTag: "root" };
+      try {
+        return { format: "json", model: JSON.parse(text), rootTag: "root", warnings: [] };
+      } catch (e) {
+        var repaired = lenientJsonParse(text);
+        return { format: "json", model: repaired.value, rootTag: "root", warnings: repaired.warnings };
+      }
     }
     if (fmt === "xml") {
-      var r = parseXml(text);
-      return { format: "xml", model: r.data, rootTag: r.rootTag };
+      try {
+        var r = parseXml(text);
+        return { format: "xml", model: r.data, rootTag: r.rootTag, warnings: [] };
+      } catch (e) {
+        var repairedXml = lenientXmlParse(text);
+        return { format: "xml", model: repairedXml.data, rootTag: repairedXml.rootTag, warnings: repairedXml.warnings };
+      }
     }
-    return { format: "querystring", model: parseQueryString(text), rootTag: "root" };
+    var qs = parseQueryString(text);
+    return { format: "querystring", model: qs.obj, rootTag: "root", warnings: qs.warnings };
   }
 
   // ---------- conversion: model -> querystring ----------
@@ -790,48 +1038,46 @@
 
   // ---------- UI wiring ----------
 
-  function showError(msg) {
+  function showFatalError(msg) {
+    errorLine.classList.remove("warn");
     errorText.textContent = msg;
     errorLine.classList.add("show");
     detectedBadge.classList.add("err");
   }
-  function hideError() {
-    errorLine.classList.remove("show");
+  function showWarning(warnings) {
+    errorLine.classList.add("warn");
+    errorText.textContent = "입력값에 오류가 있어 자동으로 보정했습니다 — " + warnings.join(" · ");
+    errorLine.classList.add("show");
+    detectedBadge.classList.remove("err");
+  }
+  function hideMessage() {
+    errorLine.classList.remove("show", "warn");
     detectedBadge.classList.remove("err");
   }
 
   function setPlaceholderState(hasContent) {
-    [convertedOutput, prettyOutput].forEach(function (el) {
-      if (hasContent) el.classList.remove("placeholder"); else el.classList.add("placeholder");
-    });
+    if (hasContent) prettyOutput.classList.remove("placeholder"); else prettyOutput.classList.add("placeholder");
     if (!hasContent) treeOutput.innerHTML = "";
   }
 
   function updateOutputs() {
-    var badgeText = FORMAT_LABEL[state.outputFormat];
-    outFormatBadgeLeft.textContent = badgeText;
-    outFormatBadgeRight.textContent = badgeText;
+    outFormatBadge.textContent = FORMAT_LABEL[state.outputFormat];
 
     if (state.lastModel === null) {
-      convertedOutput.textContent = "";
       prettyOutput.textContent = "";
       setPlaceholderState(false);
       return;
     }
 
-    var compact, pretty;
+    var pretty;
     if (state.outputFormat === "json") {
-      compact = JSON.stringify(state.lastModel);
       pretty = JSON.stringify(state.lastModel, null, 2);
     } else if (state.outputFormat === "xml") {
-      compact = modelToXml(state.lastModel, state.lastRootTag, false);
       pretty = modelToXml(state.lastModel, state.lastRootTag, true);
     } else {
-      compact = modelToQueryString(state.lastModel, false);
       pretty = modelToQueryString(state.lastModel, true);
     }
 
-    convertedOutput.textContent = compact;
     prettyOutput.textContent = pretty;
     treeOutput.innerHTML = renderTree(state.lastModel);
     setPlaceholderState(true);
@@ -840,7 +1086,7 @@
   function process() {
     var text = inputText.value;
     if (!text.trim()) {
-      hideError();
+      hideMessage();
       detectedBadge.textContent = "감지: -";
       state.lastModel = null;
       updateOutputs();
@@ -849,12 +1095,16 @@
     try {
       var result = parseInput(text, state.inputMode);
       detectedBadge.textContent = "감지: " + FORMAT_LABEL[result.format];
-      hideError();
       state.lastModel = result.model;
       state.lastRootTag = result.rootTag;
       updateOutputs();
+      if (result.warnings && result.warnings.length > 0) {
+        showWarning(result.warnings);
+      } else {
+        hideMessage();
+      }
     } catch (e) {
-      showError(e.message || String(e));
+      showFatalError(e.message || String(e));
     }
   }
 
@@ -880,8 +1130,7 @@
 
   document.querySelectorAll(".copy-btn").forEach(function (btn) {
     btn.addEventListener("click", function () {
-      var target = btn.getAttribute("data-copy") === "converted" ? convertedOutput : prettyOutput;
-      var text = target.textContent || "";
+      var text = prettyOutput.textContent || "";
       if (!text) return;
       navigator.clipboard.writeText(text).then(function () {
         var original = btn.textContent;
