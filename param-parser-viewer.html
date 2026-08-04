@@ -608,6 +608,11 @@
           closeElement(finalizeNode(stack.pop()));
         }
       } else {
+        if (!selfClosing && stack.length > 0 && stack[stack.length - 1].tag === tagName) {
+          var reopened = stack.pop();
+          addWarning("<" + tagName + ">가 반복되어 이전 태그를 자동으로 닫았습니다.");
+          closeElement(finalizeNode(reopened));
+        }
         var node = { tag: tagName, attrs: parseAttrs(attrStr), children: [], textParts: [] };
         if (selfClosing) closeElement(finalizeNode(node));
         else stack.push(node);
