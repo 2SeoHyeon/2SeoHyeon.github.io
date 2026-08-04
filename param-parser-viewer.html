@@ -496,8 +496,9 @@
       var key, value;
       if (eqIdx === -1) { key = seg; value = ""; }
       else { key = seg.slice(0, eqIdx); value = seg.slice(eqIdx + 1); }
-      try { key = decodeURIComponent(key); } catch (e) { addWarning("키를 디코딩할 수 없어 원본 텍스트를 사용했습니다."); }
-      try { value = decodeURIComponent(value); } catch (e) { addWarning("값을 디코딩할 수 없어 원본 텍스트를 사용했습니다."); }
+      var rawKey = key;
+      try { key = decodeURIComponent(key); } catch (e) { addWarning("'" + rawKey + "' 키를 디코딩할 수 없어 원본 텍스트를 사용했습니다."); }
+      try { value = decodeURIComponent(value); } catch (e) { addWarning("'" + key + "' 키의 값을 디코딩할 수 없어 원본 텍스트를 사용했습니다."); }
       addKV(obj, key, value);
     });
     if (segments.length === 0) addWarning("유효한 key=value 쌍을 찾지 못해 빈 객체로 처리했습니다.");
@@ -651,7 +652,7 @@
       return { rootTag: topLevel[0].tag, data: nodeToObj(topLevel[0]), warnings: warnings };
     }
 
-    addWarning("여러 개의 최상위 요소를 <root>로 묶었습니다.");
+    addWarning("최상위 요소 " + topLevel.map(function (n) { return "<" + n.tag + ">"; }).join(", ") + "를 <root>로 묶었습니다.");
     var rootObj = {};
     topLevel.forEach(function (node) { addKV(rootObj, node.tag, nodeToObj(node)); });
     return { rootTag: "root", data: rootObj, warnings: warnings };
@@ -670,9 +671,12 @@
     var i = 0;
     var len = text.length;
     var warnings = [];
+    var path = [];
 
+    function pathLabel() { return path.length ? path.join(".") : "최상위"; }
     function addWarning(msg) {
-      if (warnings.indexOf(msg) === -1) warnings.push(msg);
+      var full = "[" + pathLabel() + "] " + msg;
+      if (warnings.indexOf(full) === -1) warnings.push(full);
     }
     function skipWs() {
       while (i < len && /\s/.test(text.charAt(i))) i++;
@@ -689,7 +693,7 @@
         out += ch;
         i++;
       }
-      addWarning("닫히지 않은 문자열을 자동으로 닫았습니다.");
+      addWarning("'" + out + "' 문자열이 닫히지 않아 자동으로 닫았습니다.");
       return out;
     }
 
@@ -706,7 +710,7 @@
         if (c === '"' || c === "'") {
           var captured = text.slice(start, i).trim();
           i++;
-          addWarning(context === "key" ? "키에 누락된 여는 인용부호를 보정했습니다." : "값에 누락된 여는 인용부호를 보정했습니다.");
+          addWarning("'" + captured + "' " + (context === "key" ? "키에 누락된 여는 인용부호를 보정했습니다." : "값에 누락된 여는 인용부호를 보정했습니다."));
           return { value: captured };
         }
         if (c === ":" || c === "," || c === "}" || c === "]") break;
@@ -714,14 +718,14 @@
       }
       var word = text.slice(start, i).trim();
       if (context === "key") {
-        if (word !== "") addWarning("키에 누락된 인용부호를 보정했습니다.");
+        if (word !== "") addWarning("'" + word + "' 키에 누락된 인용부호를 보정했습니다.");
         return { value: word };
       }
       if (/^-?\d+(\.\d+)?([eE][+-]?\d+)?$/.test(word)) return { value: Number(word) };
       if (word === "true") return { value: true };
       if (word === "false") return { value: false };
       if (word === "null") return { value: null };
-      if (word !== "") addWarning("값에 누락된 인용부호를 보정했습니다.");
+      if (word !== "") addWarning("'" + word + "' 값에 누락된 인용부호를 보정했습니다.");
       return { value: word };
     }
 
@@ -749,7 +753,9 @@
           i++; // consume ':'
           skipWs();
           var obj2 = {};
+          path.push(strVal);
           obj2[strVal] = parseValue();
+          path.pop();
           skipWs();
           if (peek() === ",") { i++; }
           else if (peek() === "}") { i++; return obj2; }
@@ -770,9 +776,11 @@
         var key = String(readLenientToken("key").value);
         skipWs();
         if (peek() === ":") { i++; }
-        else { addWarning("키와 값 사이의 콜론(:)이 누락되어 자동으로 보정했습니다."); }
+        else { addWarning("'" + key + "' 키와 값 사이의 콜론(:)이 누락되어 자동으로 보정했습니다."); }
         skipWs();
+        path.push(key);
         obj[key] = parseValue();
+        path.pop();
         skipWs();
         if (peek() === ",") { i++; continue; }
         if (peek() === "}") { i++; break; }
@@ -793,6 +801,7 @@
     function parseArray() {
       i++; // consume '['
       var arr = [];
+      var idx = 0;
       skipWs();
       if (peek() === "]") { i++; return arr; }
       while (i < len) {
@@ -800,7 +809,10 @@
         if (peek() === "]") { i++; break; }
         if (peek() === ",") { addWarning("불필요한 쉼표를 무시했습니다."); i++; continue; }
         if (peek() === "") { addWarning("닫는 대괄호(])가 없어 자동으로 닫았습니다."); break; }
+        path.push("[" + idx + "]");
         arr.push(parseValue());
+        path.pop();
+        idx++;
         skipWs();
         if (peek() === ",") { i++; continue; }
         if (peek() === "]") { i++; break; }
