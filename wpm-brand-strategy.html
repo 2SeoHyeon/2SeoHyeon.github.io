@@ -607,6 +607,18 @@
           <div class="msg"><time>여행 종료 후</time>여행은 잘 다녀오셨어요?</div>
         </div>
       </div>
+      <div class="phone">
+        <div class="ph-contact"><div class="av">모</div><div class="who"><b>모리</b><small>WPM 여행 매니저</small></div><div class="go"></div></div>
+        <p class="ph-head">지연 · 결항 발생 시</p>
+        <div class="chat">
+          <div class="msg"><time>지연 발생</time>항공편이 35분 지연됐어요. 환승 여유시간은 충분해서 큰 영향은 없을 것 같아요.</div>
+          <div class="msg"><time>결항 발생</time>항공편이 결항됐어요. 지금 대체편을 확인하고 있어요. 확인되는 대로 바로 알려드릴게요.</div>
+        </div>
+      </div>
+    </div>
+    <div class="take reveal r3">
+      <span class="take-tag">Planner's Take</span>
+      <p>사실 이 서비스의 진짜 승부처는 정시 운항이 아니라 <strong class="mark">지연 · 결항 같은 이상 상황</strong>이다. 대형 OTA는 이 순간 자동 안내문 하나로 끝나지만, WPM은 "지금 확인하고 있어요" 한마디로 사람이 챙기고 있다는 인상을 남길 수 있다.</p>
     </div>
   </div>
 </section>
@@ -771,6 +783,7 @@
         </ul>
       </div>
     </div>
+    <p class="note" style="max-width:none; margin-top:30px;">※ 체크포인트 — Now 단계 종료 시점(2개월 후), 메시지 오픈율과 반복 CS 문의 감소가 확인되지 않으면 Next 단계로 넘어가지 않는다. 검증 없이 규모부터 키우지 않는다.</p>
   </div>
 </section>
 
@@ -803,6 +816,7 @@
       <span class="take-tag">Planner's Take</span>
       <p>디자인보다 로직이 먼저다. 예쁜 캐릭터가 잘못된 타이밍에 메시지를 보내면, 오히려 아무 캐릭터도 없느니만 못하다. 4가지 MVP 항목 중에서도 <strong class="mark">메시지 발송 로직</strong>을 가장 먼저, 가장 완성도 높게 만든다.</p>
     </div>
+    <p class="note">※ 전제 — 위 로직은 예약 시스템이 상태 변경(발권 완료 · 체크인 오픈 · 지연/결항 등) 이벤트를 외부로 전달할 수 있다는 가정 위에 있다. 실제 연동 가능 여부는 MVP 착수 전 기술 검증이 선행되어야 한다.</p>
   </div>
 </section>
 
@@ -818,6 +832,15 @@
       <div class="tile"><span class="dir">↓</span><h5>단순 문의량</h5><p>수하물·체크인 등 반복 문의를 선제 안내로 흡수한다.</p></div>
       <div class="tile"><span class="dir">↑</span><h5>콘텐츠 자산</h5><p>캐릭터를 중심으로 한 SNS·영상 콘텐츠가 별도 광고비 없이 누적된다.</p></div>
     </div>
+    <div class="card reveal r3" style="margin-top:24px;">
+      <h4>어떻게 검증할 것인가</h4>
+      <ul class="plain">
+        <li>담당자 메시지 오픈율 · 클릭률 — 알림이 실제로 읽히는지</li>
+        <li>동일 문의(수하물 · 체크인 등) CS 접수 건수 변화</li>
+        <li>여행 종료 후 만족도 · 재예약 의향 설문(NPS)</li>
+        <li>재예약 고객 중 '모리'를 기억하는 비율 — 브랜드 리콜 체크</li>
+      </ul>
+    </div>
   </div>
 </section>
 
@@ -830,6 +853,12 @@
     <h2 class="title reveal">장점보다, 먼저 의심할 것.</h2>
     <p class="lead reveal r1">이 기획을 무조건 긍정적으로 평가하지 않는다. 실행 전에 반드시 답해야 하는 질문들이다.</p>
     <div class="risk-grid reveal r2">
+      <div class="risk">
+        <p class="q">이 서비스가, 정말 필요한가?</p>
+        <div class="row problem"><b>문제</b><span>지금도 예약은 잘 되고 있다. '담당자' 없이도 고객은 항공권을 사고 여행을 간다.</span></div>
+        <div class="row cause"><b>원인</b><span>이 필요는 고객이 아니라 WPM 쪽에서 먼저 느끼는 차별화 욕구일 수 있다.</span></div>
+        <div class="row fix"><b>해결</b><span>모든 고객을 위한 기능으로 만들지 않는다. '예약 후 뭘 챙겨야 할지 몰라 불안한 고객'으로 좁힌다. 원치 않으면 알림을 끄면 그만 — 강제가 아니라 선택.</span></div>
+      </div>
       <div class="risk">
         <p class="q">캐릭터가 장식으로 끝나지 않을까?</p>
         <div class="row problem"><b>문제</b><span>비주얼만 예쁘고 실제 기능은 없는 마스코트가 될 위험.</span></div>
@@ -859,6 +888,12 @@
         <div class="row problem"><b>문제</b><span>귀여움이 곧 유치함으로 읽힐 수 있다.</span></div>
         <div class="row cause"><b>원인</b><span>캐릭터와 UI/정보 품질을 분리해서 관리하지 못할 경우.</span></div>
         <div class="row fix"><b>해결</b><span>톤앤매너 가이드로 정보 정확성과 UI 완성도를 별도로 관리한다. 귀여움은 태도, 전문성은 내용.</span></div>
+      </div>
+      <div class="risk">
+        <p class="q">캐릭터 제작 · 유지 비용은 적절한가?</p>
+        <div class="row problem"><b>문제</b><span>일러스트 · 문구 · 콘텐츠를 계속 만들어야 하는 지속 비용이 발생한다.</span></div>
+        <div class="row cause"><b>원인</b><span>초기부터 모션 · 영상 · 다양한 표정까지 갖추려는 욕심.</span></div>
+        <div class="row fix"><b>해결</b><span>정지 일러스트 5~8종으로 시작하고, 모션 · 영상은 SNS 반응이 검증된 뒤에만 추가한다. 메시지 카피는 외주가 아니라 CS 경험이 있는 내부 인력이 작성해 의존 비용을 낮춘다.</span></div>
       </div>
       <div class="risk">
         <p class="q">개인정보 · 예약 데이터 활용에 문제는 없는가?</p>
