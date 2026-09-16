@@ -283,6 +283,78 @@
     margin-top:22px; font-size:.82rem; color:var(--text-faint); border-left:2px solid var(--border-strong);
     padding-left:14px; line-height:1.7;
   }
+
+  /* ---------- HOVER LIFE ---------- */
+  .card, .tile, .risk, .chip, .ticket, .phone{
+    transition:transform .28s ease, border-color .28s ease, box-shadow .28s ease, color .2s ease;
+  }
+  .card:hover, .tile:hover, .risk:hover{
+    transform:translateY(-4px); border-color:var(--border-strong); box-shadow:0 18px 40px -22px rgba(0,0,0,.65);
+  }
+  .chip:hover{border-color:var(--accent); color:var(--text);}
+  .ticket:hover, .phone:hover{transform:translateY(-3px);}
+
+  /* ---------- ACT DIVIDER ---------- */
+  .act{
+    padding-block:clamp(38px,6vw,58px); border-top:1px solid var(--border); border-bottom:1px solid var(--border);
+    background:linear-gradient(180deg, transparent, rgba(232,163,61,.05) 50%, transparent);
+  }
+  .act-in{display:flex; align-items:baseline; justify-content:center; gap:18px; flex-wrap:wrap; text-align:center;}
+  .act-no{font-family:var(--mono); color:var(--accent); letter-spacing:.24em; font-size:.82rem; font-weight:700;}
+  .act-name{font-family:var(--serif); font-size:clamp(1.05rem,2.2vw,1.35rem); color:var(--text-muted); text-wrap:balance;}
+
+  /* ---------- EXEC BRIEF (cover) ---------- */
+  .brief{
+    margin-top:40px; border:1px solid var(--border-strong); border-radius:14px; padding:22px 26px;
+    background:rgba(255,255,255,.02); max-width:760px;
+  }
+  .brief-tag{font-family:var(--mono); font-size:.66rem; letter-spacing:.18em; color:var(--accent); text-transform:uppercase; display:block; margin-bottom:16px;}
+  .brief ol{list-style:none; margin:0; padding:0; display:grid; grid-template-columns:1fr 1fr; gap:12px 26px;}
+  .brief li{font-size:.86rem; color:var(--text-muted); line-height:1.65; padding-left:24px; position:relative;}
+  .brief li b{position:absolute; left:0; top:0; color:var(--accent-soft); font-family:var(--mono); font-size:.78rem; font-weight:700;}
+  @media (max-width:640px){ .brief ol{grid-template-columns:1fr;} }
+
+  /* ---------- PLANNER'S TAKE ---------- */
+  .take{
+    margin-top:26px; border:1px solid rgba(232,163,61,.32); border-left:3px solid var(--accent);
+    background:rgba(232,163,61,.05); border-radius:4px 12px 12px 4px; padding:18px 22px;
+  }
+  .take-tag{
+    display:inline-block; font-family:var(--mono); font-size:.64rem; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--accent); margin-bottom:10px; font-weight:700;
+  }
+  .take p{margin:0; font-size:.92rem; color:var(--text); line-height:1.75;}
+  .take p + p{margin-top:10px;}
+
+  /* ---------- ID BADGE (character) ---------- */
+  .idbadge{
+    display:inline-flex; align-items:center; gap:14px; background:var(--surface); border:1px solid var(--border-strong);
+    border-radius:12px; padding:12px 20px 12px 12px; margin:4px 0 28px;
+  }
+  .idbadge .av{
+    width:44px; height:44px; border-radius:50%; background:var(--accent); color:var(--paper-ink); flex:none;
+    display:flex; align-items:center; justify-content:center; font-family:var(--serif); font-weight:700; font-size:1.15rem;
+  }
+  .idbadge .info b{display:block; font-family:var(--serif); font-size:1.05rem; color:var(--text);}
+  .idbadge .info span{font-family:var(--mono); font-size:.7rem; color:var(--text-faint); letter-spacing:.04em;}
+
+  /* ---------- PHONE CONTACT HEADER ---------- */
+  .ph-contact{display:flex; align-items:center; gap:9px; margin-bottom:14px; padding-bottom:12px; border-bottom:1px solid var(--border);}
+  .ph-contact .av{
+    width:26px; height:26px; border-radius:50%; background:var(--accent); color:var(--paper-ink); flex:none;
+    display:flex; align-items:center; justify-content:center; font-family:var(--serif); font-weight:700; font-size:.72rem;
+  }
+  .ph-contact .who{display:flex; flex-direction:column; line-height:1.3;}
+  .ph-contact .who b{font-size:.78rem; color:var(--text); font-weight:700;}
+  .ph-contact .who small{font-family:var(--mono); font-size:.6rem; color:var(--text-faint);}
+  .ph-contact .go{margin-left:auto; width:6px; height:6px; border-radius:50%; background:var(--accent-2);}
+
+  /* ---------- DO / DON'T ---------- */
+  .bad{color:var(--danger);}
+  .good{color:var(--accent-2);}
+
+  /* ---------- ROADMAP WHEN TAG ---------- */
+  .rm-col .when{display:block; font-family:var(--mono); font-size:.68rem; color:var(--text-faint); margin:-8px 0 16px;}
 </style>
 </head>
 <body>
@@ -326,9 +398,20 @@
     </div>
     <h1 class="cover-title">작은 여행사가,<br>더 오래 기억되는<br>여행사가 되는 법</h1>
     <p class="cover-sub">항공권을 파는 곳에서 — 여행을 챙겨주는 곳으로.</p>
+    <div class="brief">
+      <span class="brief-tag">Executive Brief</span>
+      <ol>
+        <li><b>01</b>상품 다양성으로는 대형 OTA를 못 이긴다.</li>
+        <li><b>02</b>그래서 예약 이후의 경험으로 승부한다.</li>
+        <li><b>03</b>예약 순간 배정되는 담당자 '모리'가 그 경험이다.</li>
+        <li><b>04</b>지금 먼저 만들 것은 얼굴이 아니라 '정확한 타이밍'이다.</li>
+      </ol>
+    </div>
     <div class="cover-foot"><span>SCROLL TO BOARD</span><span class="arrow"></span></div>
   </div>
 </section>
+
+<div class="act"><div class="wrap act-in"><span class="act-no">ACT I</span><span class="act-name">왜, 다르게 싸워야 하는가</span></div></div>
 
 <!-- ============ 02 WHY WPM ============ -->
 <section class="stop" id="s02">
@@ -412,6 +495,8 @@
   </div>
 </section>
 
+<div class="act"><div class="wrap act-in"><span class="act-no">ACT II</span><span class="act-name">담당자라는, 새로운 여행 경험</span></div></div>
+
 <!-- ============ 06 BIG IDEA ============ -->
 <section class="stop" id="s06" style="background:var(--surface-2);">
   <div class="wrap" style="text-align:center;">
@@ -429,13 +514,18 @@
     <p class="eyebrow">SEC.07 — WPM TRAVEL ASSISTANT</p>
     <h2 class="title reveal">캐릭터가 아니라, 담당자.</h2>
     <p class="lead reveal r1">마스코트로 시작하지 않는다. <strong class="mark">“WPM에서 나의 여행을 담당하는 개인 여행 안내 직원”</strong>이라는 역할에서 시작한다.</p>
-    <p class="lead reveal r2">고객이 항공권을 예약하는 순간, 그 여행을 맡는 담당자가 배정된다는 개념이다. 예약번호가 아니라 담당자가 생긴다.</p>
+    <div class="idbadge reveal r1"><div class="av">모</div><div class="info"><b>모리 · Mori</b><span>WPM TRAVEL MANAGER</span></div></div>
+    <p class="lead reveal r2">고객이 항공권을 예약하는 순간, 그 여행을 맡는 담당자 <strong class="mark">모리</strong>가 배정된다는 개념이다. 예약번호가 아니라 담당자가 생긴다.</p>
     <div class="grid3" style="margin-top:30px;">
       <div class="card reveal r2"><h4>역할</h4><p>정보 전달자가 아니라, 예약 상태와 일정을 기준으로 먼저 챙기는 담당자.</p></div>
-      <div class="card reveal r3"><h4>배정 시점</h4><p>항공권 예약이 완료되는 순간, 이 여행을 담당하는 캐릭터가 생긴다.</p></div>
+      <div class="card reveal r3"><h4>배정 시점</h4><p>항공권 예약이 완료되는 순간, 이 여행을 담당하는 모리가 생긴다.</p></div>
       <div class="card reveal r4"><h4>존재 방식</h4><p>장식이 아니라 서비스의 인터페이스. 웹, 앱, 알림 어디서든 같은 말투로 등장한다.</p></div>
     </div>
-    <p class="note">※ 캐릭터의 이름·비주얼은 별도 네이밍/디자인 워크숍을 통해 확정이 필요한 영역이며, 본 기획서는 역할과 세계관의 방향성을 제시한다.</p>
+    <div class="take reveal r2">
+      <span class="take-tag">Planner's Take</span>
+      <p>이름은 '모시다'(정성껏 곁에서 챙긴다는 뜻의 한국어)에서 가져온 <strong class="mark">모리</strong>를 제안한다. 세계관은 여권 입국 스탬프에서 태어난 존재 — 그래서 모리가 등장할 때마다 도장을 '콩' 찍는 모션을 남긴다. 이 도장 자국은 이후 스티커·굿즈로 확장하기도 좋은 시각 자산이 된다.</p>
+      <p>※ 이름·세계관은 방향성 제안이며, 실제 적용 전 상표·저작권 검증이 필요하다.</p>
+    </div>
   </div>
 </section>
 
@@ -450,6 +540,7 @@
       <h4 style="font-family:var(--serif); font-size:1.3rem;">서현님의 도쿄 여행</h4>
       <p class="mono" style="font-size:.85rem; color:var(--accent-soft); margin:10px 0;">2026.10.31 · 인천 → 도쿄</p>
       <p style="color:var(--text-muted); font-size:.88rem; margin:0;">항공권 발권 완료 · 출발 D-12</p>
+      <p style="color:var(--text-faint); font-size:.76rem; margin:14px 0 0; font-family:var(--mono);">담당 매니저 · 모리</p>
     </div>
     <p class="lead reveal r3" style="margin-top:30px;">여행이 끝나면 “도쿄 여행은 어땠어요?”라는 한마디로 마무리한다. 이 기록이 쌓이면, 다음 단계의 개인화가 가능해진다.</p>
     <p class="callout reveal r4">“이번이 세 번째 일본 여행이네요.” “지난 도쿄 여행은 2025년이었죠.” — 이력이 쌓인 이후의 경험이다.</p>
@@ -476,6 +567,10 @@
       <div class="link"></div>
       <div class="node"><div class="circle">06</div><span class="lb">귀국</span><small>RETURNED</small></div>
     </div>
+    <div class="take reveal r3">
+      <span class="take-tag">Planner's Take</span>
+      <p>여섯 정류장 모두를 알림으로 채울 필요는 없다. 대형 OTA 앱도 이미 보내는 "출발 D-1" 같은 알림 대신, <strong class="mark">위탁수하물 포함 여부·환승 동선</strong>처럼 정작 대형 플랫폼이 잘 안 챙겨주는 순간부터 채운다.</p>
+    </div>
   </div>
 </section>
 
@@ -487,6 +582,7 @@
     <p class="lead reveal r1">알림이 아니라 담당자의 말투로. 정보가 필요한 정확한 시점에만 등장한다.</p>
     <div class="phones reveal r2">
       <div class="phone">
+        <div class="ph-contact"><div class="av">모</div><div class="who"><b>모리</b><small>WPM 여행 매니저</small></div><div class="go"></div></div>
         <p class="ph-head">예약 · 결제 · 발권</p>
         <div class="chat">
           <div class="msg"><time>예약 직후</time>예약 완료했어요. 이제 제가 챙겨드릴게요.</div>
@@ -495,6 +591,7 @@
         </div>
       </div>
       <div class="phone">
+        <div class="ph-contact"><div class="av">모</div><div class="who"><b>모리</b><small>WPM 여행 매니저</small></div><div class="go"></div></div>
         <p class="ph-head">출발 전 안내</p>
         <div class="chat">
           <div class="msg"><time>D-7</time>여행이 일주일 앞으로 다가왔어요. 여권과 서류를 확인해볼까요?</div>
@@ -503,6 +600,7 @@
         </div>
       </div>
       <div class="phone">
+        <div class="ph-contact"><div class="av">모</div><div class="who"><b>모리</b><small>WPM 여행 매니저</small></div><div class="go"></div></div>
         <p class="ph-head">환승 · 여행 · 귀국</p>
         <div class="chat">
           <div class="msg"><time>환승 여행</time>환승 시간이 1시간 10분이에요. 공항 이동 동선을 미리 확인해두는 걸 추천해요.</div>
@@ -547,12 +645,14 @@
       <div style="padding:0 26px;"><span class="status"><i></i>발권완료</span></div>
       <div class="perf"></div>
       <div class="stub">
-        <div class="avatar">W</div>
-        <div class="bubble"><b>여행 담당자</b>수하물은 위탁 20kg까지 포함이에요. 공항에는 출발 2시간 전 도착을 추천해요.</div>
+        <div class="avatar">모</div>
+        <div class="bubble"><b>여행 매니저 모리</b>수하물은 위탁 20kg까지 포함이에요. 공항에는 출발 2시간 전 도착을 추천해요.</div>
       </div>
     </div>
   </div>
 </section>
+
+<div class="act"><div class="wrap act-in"><span class="act-no">ACT III</span><span class="act-name">귀엽지만, 가볍지 않게</span></div></div>
 
 <!-- ============ 13 BRAND SYSTEM ============ -->
 <section class="stop" id="s13">
@@ -566,13 +666,31 @@
       <div class="card reveal r4"><h4>말투</h4><p>편안하지만 존댓말. 친구가 아니라, 믿을 수 있는 담당자의 어조.</p></div>
     </div>
     <p class="callout reveal r2" style="margin-top:36px;">공식 = 귀여운 캐릭터 + 전문적인 여행 서비스</p>
-    <div class="card reveal r3" style="margin-top:26px;">
-      <h4>캐릭터 디자인 방향</h4>
-      <ul class="plain">
-        <li>둥글되 유아적이지 않은 형태 — 심플한 실루엣</li>
-        <li>WPM 브랜드 컬러(골드 · 네이비) 기반의 유니폼 모티프</li>
-        <li>표정은 과하지 않게, 상황별 최소 표정 세트로 시작</li>
-      </ul>
+    <div class="grid2" style="margin-top:26px;">
+      <div class="card reveal r3">
+        <h4>캐릭터 디자인 방향</h4>
+        <ul class="plain">
+          <li>둥글되 유아적이지 않은 형태 — 심플한 실루엣</li>
+          <li>WPM 브랜드 컬러(골드 · 네이비) 기반의 유니폼 모티프</li>
+          <li>표정은 과하지 않게, 상황별 최소 표정 세트로 시작</li>
+        </ul>
+      </div>
+      <div class="card reveal r4">
+        <h4>말투 Do / Don't</h4>
+        <div class="tbl-wrap" style="margin-top:6px;">
+          <table class="simple">
+            <thead><tr><th>상황</th><th class="bad">이렇게 말하지 않는다</th><th class="good">이렇게 말한다</th></tr></thead>
+            <tbody>
+              <tr><td>출발 안내</td><td>안뇽~ 비행기 탈 시간이에요!! ✈️✈️</td><td>출발까지 7일 남았어요. 여권부터 확인해볼까요?</td></tr>
+              <tr><td>특가 안내</td><td>헐 실화? 이 항공편 완전 대박</td><td>지금 가장 합리적인 선택이에요. 다만 경유가 1회 있어요.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="take reveal r2" style="margin-top:26px;">
+      <span class="take-tag">Planner's Take</span>
+      <p>브랜드가 유치해지는 지점은 캐릭터 그림체가 아니라 <strong class="mark">말투</strong>다. 캐릭터 비주얼보다 먼저, 모든 메시지 문장을 이 Do/Don't 기준으로 톤 QA 해야 한다.</p>
     </div>
   </div>
 </section>
@@ -610,8 +728,14 @@
       <div class="step"><span class="n">06</span><div><h5>브랜드 캠페인</h5><p>캐릭터를 중심으로 한 통합 캠페인 전개.</p></div></div>
       <div class="step"><span class="n">07</span><div><h5>협업 (장기)</h5><p>인플루언서·연예인 협업은 브랜드가 자리잡은 이후의 확장 단계. 지금 실행하지 않는다.</p></div></div>
     </div>
+    <div class="take reveal r3">
+      <span class="take-tag">Planner's Take</span>
+      <p>연예인 협업은 지금 논의할 단계가 아니다. 오히려 목표는 반대다 — <strong class="mark">모리가 연예인 없이도 기억되는 브랜드 자산</strong>이 되는 것. 초기 예산은 07단계가 아니라 01~03단계에 집중한다.</p>
+    </div>
   </div>
 </section>
+
+<div class="act"><div class="wrap act-in"><span class="act-no">ACT IV</span><span class="act-name">지금, 무엇부터 만들 것인가</span></div></div>
 
 <!-- ============ 16 ROADMAP ============ -->
 <section class="stop" id="s16">
@@ -621,6 +745,7 @@
     <div class="grid3" style="margin-top:26px;">
       <div class="rm-col reveal r2">
         <h4>Now</h4>
+        <span class="when">0 – 2개월</span>
         <ul class="plain">
           <li>캐릭터 역할·세계관 정립</li>
           <li>예약 상태 기반 메시지 4~5종 설계</li>
@@ -629,6 +754,7 @@
       </div>
       <div class="rm-col reveal r3">
         <h4>Next</h4>
+        <span class="when">3 – 6개월</span>
         <ul class="plain">
           <li>마이트립(여행 타임라인) 화면 오픈</li>
           <li>알림 자동 발송 로직 구축</li>
@@ -637,6 +763,7 @@
       </div>
       <div class="rm-col reveal r4">
         <h4>Future</h4>
+        <span class="when">6개월 이후</span>
         <ul class="plain">
           <li>여행 이력 기반 개인화 추천</li>
           <li>굿즈 · 브랜드 캠페인</li>
@@ -672,6 +799,10 @@
         </ul>
       </div>
     </div>
+    <div class="take reveal r4">
+      <span class="take-tag">Planner's Take</span>
+      <p>디자인보다 로직이 먼저다. 예쁜 캐릭터가 잘못된 타이밍에 메시지를 보내면, 오히려 아무 캐릭터도 없느니만 못하다. 4가지 MVP 항목 중에서도 <strong class="mark">메시지 발송 로직</strong>을 가장 먼저, 가장 완성도 높게 만든다.</p>
+    </div>
   </div>
 </section>
 
@@ -689,6 +820,8 @@
     </div>
   </div>
 </section>
+
+<div class="act"><div class="wrap act-in"><span class="act-no">ACT V</span><span class="act-name">다시, 비판적으로</span></div></div>
 
 <!-- ============ 19 RISKS ============ -->
 <section class="stop" id="s19">
